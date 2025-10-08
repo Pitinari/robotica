@@ -25,12 +25,11 @@ class CylinderDetector(Node):
         # Keep track of last detected cylinder count to reduce logging
         self.last_cylinder_count = 0
         self.scan_count = 0
-        self.max_markers_published = 0
         
         # Tracking cylinders over time for stability
         self.tracked_cylinders = []
         self.frame_count = 0
-        self.max_frames_missing = 10  # Keep cylinder for 10 frames even if not detected
+        self.max_frames_missing = 5  # Keep cylinder for 5 frames even if not detected
         
         # Subscribers
         self.scan_sub = self.create_subscription(
@@ -194,29 +193,6 @@ class CylinderDetector(Node):
             
             marker_array.markers.append(text_marker)
         
-        # Delete any old markers that are no longer needed
-        # (if we detected fewer cylinders than before)
-        for i in range(len(cylinders), self.max_markers_published):
-            # Delete old cylinder marker
-            delete_marker = Marker()
-            delete_marker.header = header
-            delete_marker.header.frame_id = 'odom'
-            delete_marker.ns = 'cylinders'
-            delete_marker.id = i
-            delete_marker.action = Marker.DELETE
-            marker_array.markers.append(delete_marker)
-            
-            # Delete old text marker
-            delete_text = Marker()
-            delete_text.header = header
-            delete_text.header.frame_id = 'odom'
-            delete_text.ns = 'cylinder_labels'
-            delete_text.id = i
-            delete_text.action = Marker.DELETE
-            marker_array.markers.append(delete_text)
-        
-        # Update max markers count
-        self.max_markers_published = max(len(cylinders), self.max_markers_published)
         
         self.cylinder_markers_pub.publish(marker_array)
     
@@ -226,7 +202,7 @@ class CylinderDetector(Node):
         Matches new detections with existing tracked cylinders and maintains them
         even if temporarily not detected.
         """
-        matching_threshold = 0.4  # 40cm - if cylinder is within this distance, it's the same one
+        matching_threshold = 0.3  # 30cm - if cylinder is within this distance, it's the same one
         
         # Mark all currently detected cylinders in the tracking list
         matched_indices = set()
@@ -246,7 +222,7 @@ class CylinderDetector(Node):
             if best_match_idx is not None:
                 # Update existing tracked cylinder with new detection
                 # Use exponential moving average for smooth updates
-                alpha = 0.3  # Smoothing factor
+                alpha = 0.5  # Smoothing factor
                 self.tracked_cylinders[best_match_idx]['x'] = (
                     alpha * detected['x'] + 
                     (1 - alpha) * self.tracked_cylinders[best_match_idx]['x']
@@ -280,42 +256,6 @@ class CylinderDetector(Node):
         return {'x': x, 'y': y}
     
     
-    def __calculate_arc_span(self, cluster, circle):
-        """
-        Calculate the angular span of the arc formed by the points around the circle center.
-        Returns span in degrees.
-        """
-        if len(cluster) < 2:
-            return 0
-        
-        # Calculate angles of all points relative to circle center
-        angles = []
-        for point in cluster:
-            dx = point['x'] - circle['x']
-            dy = point['y'] - circle['y']
-            angle = math.atan2(dy, dx)
-            angles.append(angle)
-        
-        # Sort angles
-        angles.sort()
-        
-        # Calculate span (handle wraparound at -π/π boundary)
-        max_gap = 0
-        for i in range(len(angles)):
-            next_i = (i + 1) % len(angles)
-            gap = angles[next_i] - angles[i]
-            
-            # Handle wraparound
-            if gap < 0:
-                gap += 2 * math.pi
-            
-            max_gap = max(max_gap, gap)
-        
-        # Convert to degrees
-        span_rad = 2 * math.pi - max_gap
-        span_deg = math.degrees(span_rad)
-        
-        return span_deg
     
     def __calculate_circle_center_3_points(self, p1, p2, p3, radius):
         """
