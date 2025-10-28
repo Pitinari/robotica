@@ -1,0 +1,12 @@
+build/
+install/
+log/
+data/
+output/
+*.bag
+*.db3
+.git/
+.vscode/
+*.pyc
+__pycache__/
+

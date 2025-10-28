@@ -1,0 +1,25 @@
+# Build artifacts
+build/
+install/
+log/
+
+# Output files
+output/
+*.jpg
+*.png
+*.pcd
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp
+*.log

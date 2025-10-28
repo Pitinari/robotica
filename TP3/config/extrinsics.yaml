@@ -1,0 +1,21 @@
+# Stereo extrinsic parameters (transformation from left to right camera)
+# These are example parameters from EuRoC dataset
+# Replace with actual calibration results from Exercise 1
+
+# Rotation matrix from cam0 to cam1
+R:
+  rows: 3
+  cols: 3
+  data: [0.999997256477881, 0.002312067192424, 0.000376008102415,
+         -0.002317135723281, 0.999898048506644, 0.014089835846648,
+         -0.000343393120525, -0.014090668452714, 0.999900662637729]
+
+# Translation vector from cam0 to cam1 (in meters)
+T:
+  rows: 3
+  cols: 1
+  data: [-0.110073808127187, 0.000156612054392, -0.000889382785432]
+
+# Baseline (distance between cameras in meters)
+baseline: 0.110073808127187
+
