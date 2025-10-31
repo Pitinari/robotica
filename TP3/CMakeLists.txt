@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
+
+# Suppress CMake policy warnings globally
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0074 NEW)
+
 project(stereo_vision)
 
 # Default to C++17
@@ -112,23 +117,31 @@ add_executable(triangulator_node src/nodes/triangulator_node.cpp)
 target_link_libraries(triangulator_node stereo_vision_lib ${OpenCV_LIBRARIES})
 ament_target_dependencies(triangulator_node ${dependencies})
 
+# Mapping Node
+add_executable(mapping_node src/nodes/mapping_node.cpp)
+target_link_libraries(mapping_node stereo_vision_lib ${OpenCV_LIBRARIES})
+if(PCL_FOUND)
+  target_link_libraries(mapping_node ${PCL_LIBRARIES})
+endif()
+ament_target_dependencies(mapping_node ${dependencies})
+
 # Disparity Node
-# add_executable(disparity_node src/nodes/disparity_node.cpp)
-# target_link_libraries(disparity_node stereo_vision_lib ${OpenCV_LIBRARIES})
-# ament_target_dependencies(disparity_node ${dependencies})
+add_executable(disparity_node src/nodes/disparity_node.cpp)
+target_link_libraries(disparity_node stereo_vision_lib ${OpenCV_LIBRARIES})
+ament_target_dependencies(disparity_node ${dependencies})
 
 # Dense Reconstruction Node
-# add_executable(dense_reconstruction_node src/nodes/dense_reconstruction_node.cpp)
-# target_link_libraries(dense_reconstruction_node stereo_vision_lib ${OpenCV_LIBRARIES})
-# if(PCL_FOUND)
-#   target_link_libraries(dense_reconstruction_node ${PCL_LIBRARIES})
-# endif()
-# ament_target_dependencies(dense_reconstruction_node ${dependencies})
+add_executable(dense_reconstruction_node src/nodes/dense_reconstruction_node.cpp)
+target_link_libraries(dense_reconstruction_node stereo_vision_lib ${OpenCV_LIBRARIES})
+if(PCL_FOUND)
+  target_link_libraries(dense_reconstruction_node ${PCL_LIBRARIES})
+endif()
+ament_target_dependencies(dense_reconstruction_node ${dependencies})
 
-# Pose Estimator Node
-# add_executable(pose_estimator_node src/nodes/pose_estimator_node.cpp)
-# target_link_libraries(pose_estimator_node stereo_vision_lib ${OpenCV_LIBRARIES})
-# ament_target_dependencies(pose_estimator_node ${dependencies})
+# Pose Estimator Node (Monocular Visual Odometry)
+add_executable(pose_estimation_node src/nodes/pose_estimation_node.cpp)
+target_link_libraries(pose_estimation_node stereo_vision_lib ${OpenCV_LIBRARIES})
+ament_target_dependencies(pose_estimation_node ${dependencies})
 
 # Feature Mapper Node (Optional)
 # add_executable(feature_mapper_node src/nodes/feature_mapper_node.cpp)
@@ -138,13 +151,13 @@ ament_target_dependencies(triangulator_node ${dependencies})
 # endif()
 # ament_target_dependencies(feature_mapper_node ${dependencies})
 
-# Dense Mapper Node (Optional)
-# add_executable(dense_mapper_node src/nodes/dense_mapper_node.cpp)
-# target_link_libraries(dense_mapper_node stereo_vision_lib ${OpenCV_LIBRARIES})
-# if(PCL_FOUND)
-#   target_link_libraries(dense_mapper_node ${PCL_LIBRARIES})
-# endif()
-# ament_target_dependencies(dense_mapper_node ${dependencies})
+# Dense Mapper Node
+add_executable(dense_mapper_node src/nodes/dense_mapper_node.cpp)
+target_link_libraries(dense_mapper_node stereo_vision_lib ${OpenCV_LIBRARIES})
+if(PCL_FOUND)
+  target_link_libraries(dense_mapper_node ${PCL_LIBRARIES})
+endif()
+ament_target_dependencies(dense_mapper_node ${dependencies})
 
 # Stereo Pipeline Node (combines multiple steps)
 # add_executable(stereo_pipeline_node src/nodes/stereo_pipeline_node.cpp)
@@ -161,6 +174,11 @@ install(TARGETS
   feature_extractor_node
   feature_matcher_node
   triangulator_node
+  mapping_node
+  disparity_node
+  dense_reconstruction_node
+  pose_estimation_node
+  dense_mapper_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
