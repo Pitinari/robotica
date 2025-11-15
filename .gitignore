@@ -1,2 +1,6 @@
 TP1/mav0/*
 TP1/cam0_estimated.csv
+gtsam/*
+TP4/build/*
+TP4/results/*
+dataset/*
