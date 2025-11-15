@@ -1,78 +1,190 @@
-# GTSAM Graph-SLAM Project
+# Proyecto GTSAM Graph-SLAM
 
-This project implements 2D and 3D Graph-SLAM algorithms using the GTSAM library. The goal is to analyze datasets in G2O format and optimize trajectories based on the provided poses and edges.
+Implementación de SLAM de Grafos de Poses en 2D y 3D usando la biblioteca GTSAM (Georgia Tech Smoothing and Mapping). Este proyecto implementa tanto métodos de **optimización batch** (Gauss-Newton) como **optimización incremental** (ISAM2).
 
-## Project Structure
+## Estructura del Proyecto
 
-- **src/**: Contains the source code for the application.
-  - **main.cpp**: Entry point of the application.
-  - **graph_slam_2d.cpp**: Implementation of the 2D Graph-SLAM algorithm.
-  - **graph_slam_3d.cpp**: Implementation of the 3D Graph-SLAM algorithm.
-  - **g2o_reader.cpp**: Functions to read G2O files and extract poses and edges.
-  - **utils/**: Contains utility functions for visualization and file operations.
-    - **visualization.cpp**: Utility functions for visualizing SLAM results.
-    - **file_utils.cpp**: Functions for handling file operations.
+```
+TP4/
+├── src/
+│   ├── main.cpp                  # Punto de entrada principal
+│   ├── g2o_reader.cpp            # Parseador de archivos G2O
+│   ├── graph_slam_2d.cpp         # Implementación SLAM 2D
+│   ├── graph_slam_3d.cpp         # Implementación SLAM 3D
+│   └── utils/
+│       └── file_utils.cpp        # Utilidades de E/S de archivos
+├── include/
+│   ├── g2o_reader.h
+│   ├── graph_slam_2d.h
+│   ├── graph_slam_3d.h
+│   └── utils/
+│       └── file_utils.h
+├── data/
+│   ├── input_INTEL_g2o.g2o      # Dataset 2D (Intel Research Lab)
+│   └── parking-garage.g2o        # Dataset 3D (Parking Garage)
+├── results/                      # Directorio de salida para resultados
+├── plot_2d_results.py           # Script Python para visualización 2D
+├── plot_3d_results.py           # Script Python para visualización 3D
+└── CMakeLists.txt               # Configuración de compilación CMake
+```
 
-- **include/**: Header files for the project.
-  - **graph_slam_2d.h**: Declarations for the 2D Graph-SLAM implementation.
-  - **graph_slam_3d.h**: Declarations for the 3D Graph-SLAM implementation.
-  - **g2o_reader.h**: Declarations for G2O reading functions.
-  - **utils/**: Header files for utility functions.
-    - **visualization.h**: Declarations for visualization utilities.
-    - **file_utils.h**: Declarations for file utility functions.
+## Requisitos Previos
 
-- **data/**: Contains the G2O datasets used for testing.
-  - **input_INTEL_g2o.g2o**: 2D G2O dataset for testing.
-  - **parking-garage.g2o**: 3D G2O dataset for testing.
+### Software Requerido
 
-- **results/**: Directory for storing results.
-  - **plots/**: Contains plots generated from SLAM results.
-  - **logs/**: Stores log files generated during execution.
+- **CMake** (>= 3.10)
+- **Compilador C++** con soporte C++14 (GCC >= 4.7.3)
+- **Biblioteca GTSAM** (ya compilada en `../gtsam`)
+- **Python 3** con paquetes:
+  - `matplotlib`
+  - `pandas`
+  - `numpy`
 
-- **Dockerfile**: Instructions to build a Docker image for the project environment.
+### Instalar Dependencias de Python
 
-- **CMakeLists.txt**: Configuration file for CMake to build the project.
+```bash
+pip install matplotlib pandas numpy
+```
 
-## Setup Instructions
+## Compilar el Proyecto
 
-1. **Clone the Repository**:
-   Clone the repository from GitHub:
-   ```
-   git clone https://github.com/borglab/gtsam.git
-   ```
+La biblioteca GTSAM ya está compilada en `./gtsam/build`. Para compilar este proyecto:
 
-2. **Install Dependencies**:
-   Ensure you have the following dependencies installed:
-   - Eigen
-   - Boost (>= 1.58)
-   - CMake (>= 3.0)
-   - A modern C++ compiler (GCC >= 4.7.3)
+```bash
+cd ./TP4
 
-   You can install Boost and CMake on Ubuntu using:
-   ```
-   sudo apt-get install libboost-all-dev cmake
-   ```
+# Crear directorio de compilación
+mkdir -p build
+cd build
 
-3. **Build the Project**:
-   Navigate to the project directory and create a build directory:
-   ```
-   cd gtsam-graph-slam
-   mkdir build
-   cd build
-   cmake ..
-   make -j10
-   sudo make install -j10
-   ```
+# Configurar con CMake
+cmake ..
 
-## Usage
+# Compilar
+make
 
-After building the project, you can run the application using the compiled binary. The application will read the G2O datasets and perform the Graph-SLAM optimization, generating visualizations and logs of the results.
+```
 
-## Algorithms Implemented
+## Ejecutar los Algoritmos
 
-- **2D Graph-SLAM**: Optimizes trajectories in a 2D space using G2O data.
-- **3D Graph-SLAM**: Optimizes trajectories in a 3D space using G2O data.
+El programa soporta cuatro modos de operación:
 
-## Results
+### Uso
 
-The results of the SLAM algorithms, including optimized trajectories and visualizations, will be stored in the `results/` directory.
+```bash
+./build/graph_slam <modo> <archivo_g2o> <prefijo_salida>
+```
+
+**Modos:**
+
+- `2d-batch` - Optimización batch 2D usando Gauss-Newton
+- `2d-incremental` - Optimización incremental 2D usando ISAM2
+- `3d-batch` - Optimización batch 3D usando Gauss-Newton
+- `3d-incremental` - Optimización incremental 3D usando ISAM2
+
+### Tarea 2.2.B - Optimización Batch 2D
+
+Optimizar el dataset Intel usando optimización batch Gauss-Newton:
+
+```bash
+./build/graph_slam 2d-batch data/input_INTEL_g2o.g2o results/2d_batch
+```
+
+**Salida:**
+
+- `results/2d_batch_initial.csv` - Trayectoria sin optimizar
+- `results/2d_batch_optimized.csv` - Trayectoria optimizada
+
+**Visualizar:**
+
+```bash
+python3 plot_2d_results.py results/2d_batch_initial.csv results/2d_batch_optimized.csv results/2d_batch.png "Optimización Batch 2D"
+```
+
+### Tarea 2.3.C - Optimización Incremental 2D
+
+Optimizar el dataset Intel usando ISAM2 incremental:
+
+```bash
+./build/graph_slam 2d-incremental data/input_INTEL_g2o.g2o results/2d_incremental
+```
+
+**Salida:**
+
+- `results/2d_incremental_initial.csv` - Trayectoria sin optimizar
+- `results/2d_incremental_optimized.csv` - Trayectoria optimizada
+
+**Visualizar:**
+
+```bash
+python3 plot_2d_results.py results/2d_incremental_initial.csv results/2d_incremental_optimized.csv results/2d_incremental.png "Optimización Incremental 2D (ISAM2)"
+```
+
+### Tarea 3.2.B - Optimización Batch 3D
+
+Optimizar el dataset Parking Garage usando batch Gauss-Newton:
+
+```bash
+./build/graph_slam 3d-batch data/parking-garage.g2o results/3d_batch
+```
+
+**Salida:**
+
+- `results/3d_batch_initial.csv` - Trayectoria sin optimizar
+- `results/3d_batch_optimized.csv` - Trayectoria optimizada
+
+**Visualizar:**
+
+```bash
+python3 plot_3d_results.py results/3d_batch_initial.csv results/3d_batch_optimized.csv results/3d_batch.png "Optimización Batch 3D"
+```
+
+### Tarea 3.3.C - Optimización Incremental 3D
+
+Optimizar el dataset Parking Garage usando ISAM2 incremental:
+
+```bash
+./build/graph_slam 3d-incremental data/parking-garage.g2o results/3d_incremental
+```
+
+**Salida:**
+
+- `results/3d_incremental_initial.csv` - Trayectoria sin optimizar
+- `results/3d_incremental_optimized.csv` - Trayectoria optimizada
+
+**Visualizar:**
+
+```bash
+python3 plot_3d_results.py results/3d_incremental_initial.csv results/3d_incremental_optimized.csv results/3d_incremental.png "Optimización Incremental 3D (ISAM2)"
+```
+
+## Archivos de Salida
+
+### Formato CSV
+
+**CSV de Trayectoria 2D:**
+
+```csv
+id,x,y,theta
+0,0.0,0.0,0.0
+1,0.5,0.1,0.05
+...
+```
+
+**CSV de Trayectoria 3D:**
+
+```csv
+id,x,y,z,qx,qy,qz,qw
+0,0.0,0.0,0.0,0.0,0.0,0.0,1.0
+1,1.0,0.1,0.0,0.0,0.0,0.05,0.998
+...
+```
+
+### Visualización
+
+Los scripts de Python generan gráficos de calidad publicable que muestran:
+
+- **Línea roja**: Trayectoria sin optimizar (de las estimaciones iniciales del archivo G2O)
+- **Línea azul**: Trayectoria optimizada (después de la optimización SLAM)
+- **Círculo verde**: Posición inicial
+- **Cuadrado violeta**: Posición final
